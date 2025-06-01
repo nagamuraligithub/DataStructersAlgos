@@ -1,0 +1,238 @@
+package com.example;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class BubbleSortAlgo extends JFrame {
+    private JTextField textArraySizeInput;
+    private JTextField textArrayElementsInput;
+    private JTextArea textActualArray;
+    private JTextArea textSortedArray;
+    private JButton btnAddElements, btnSortArray, btnCreateArray, btnReset;
+    private int[] array;
+    private int currentIndex = 0;
+    private int arraySize = 0;
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new BubbleSortAlgo().setVisible(true));
+    }
+
+    public BubbleSortAlgo() {
+        setTitle("Bubble Sort");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setMinimumSize(new Dimension(800, 600));
+        setLayout(new BorderLayout());
+
+        JLabel backgroundLabel = new JLabel();
+        backgroundLabel.setLayout(new GridBagLayout());
+
+        ImageIcon originalIcon = new ImageIcon("C:/Users/areva/OneDrive/Desktop/BubbleSort.png");
+        backgroundLabel.setIcon(originalIcon);
+
+        addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent e) {
+                Image img = originalIcon.getImage().getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+                backgroundLabel.setIcon(new ImageIcon(img));
+            }
+        });
+
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(15, 15, 15, 15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        Font font = new Font("Arial", Font.BOLD, 18);
+        Color red = Color.RED;
+
+        // Array Size row
+        JLabel lblArraySize = new JLabel("Array Size:");
+        styleComponent(lblArraySize, font, red);
+        gbc.gridx = 0; gbc.gridy = 0;
+        mainPanel.add(lblArraySize, gbc);
+
+        textArraySizeInput = new JTextField(10);
+        styleComponent(textArraySizeInput, font, red);
+        gbc.gridx = 1;
+        mainPanel.add(textArraySizeInput, gbc);
+
+        btnCreateArray = new JButton("Create Array");
+        styleComponent(btnCreateArray, font, red);
+        gbc.gridx = 2;
+        mainPanel.add(btnCreateArray, gbc);
+
+        // Enter Element row
+        JLabel lblElement = new JLabel("Enter Element:");
+        styleComponent(lblElement, font, red);
+        gbc.gridx = 0; gbc.gridy = 1;
+        mainPanel.add(lblElement, gbc);
+
+        textArrayElementsInput = new JTextField(10);
+        textArrayElementsInput.setEnabled(false);
+        styleComponent(textArrayElementsInput, font, red);
+        gbc.gridx = 1;
+        mainPanel.add(textArrayElementsInput, gbc);
+
+        btnAddElements = new JButton("Add Element");
+        btnAddElements.setEnabled(false);
+        styleComponent(btnAddElements, font, red);
+        gbc.gridx = 2;
+        mainPanel.add(btnAddElements, gbc);
+
+        // Sort Array button row
+        btnSortArray = new JButton("Sort Array");
+        btnSortArray.setEnabled(false);
+        styleComponent(btnSortArray, font, red);
+        gbc.gridx = 1; gbc.gridy = 2;
+        mainPanel.add(btnSortArray, gbc);
+
+        // Now create two panels for Original Array and Sorted Array to align label+text area properly
+
+        // Original Array Panel
+        JPanel originalArrayPanel = new JPanel(new BorderLayout(5, 5));
+        originalArrayPanel.setOpaque(false);
+
+        JLabel lblOriginal = new JLabel("Original Array:");
+        styleComponent(lblOriginal, font, red);
+        originalArrayPanel.add(lblOriginal, BorderLayout.NORTH);
+
+        textActualArray = new JTextArea(2, 25);
+        textActualArray.setEditable(false);
+        textActualArray.setLineWrap(true);
+        textActualArray.setWrapStyleWord(true);
+        styleComponent(textActualArray, font, red);
+        originalArrayPanel.add(new JScrollPane(textActualArray), BorderLayout.CENTER);
+
+        // Sorted Array Panel
+        JPanel sortedArrayPanel = new JPanel(new BorderLayout(5, 5));
+        sortedArrayPanel.setOpaque(false);
+
+        JLabel lblSorted = new JLabel("Sorted Array:");
+        styleComponent(lblSorted, font, red);
+        sortedArrayPanel.add(lblSorted, BorderLayout.NORTH);
+
+        textSortedArray = new JTextArea(2, 25);
+        textSortedArray.setEditable(false);
+        textSortedArray.setLineWrap(true);
+        textSortedArray.setWrapStyleWord(true);
+        styleComponent(textSortedArray, font, red);
+        sortedArrayPanel.add(new JScrollPane(textSortedArray), BorderLayout.CENTER);
+
+        // Place these two panels side-by-side
+        JPanel arraysContainer = new JPanel(new GridLayout(1, 2, 30, 0));
+        arraysContainer.setOpaque(false);
+        arraysContainer.add(originalArrayPanel);
+        arraysContainer.add(sortedArrayPanel);
+
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 3;
+        gbc.fill = GridBagConstraints.BOTH;
+        mainPanel.add(arraysContainer, gbc);
+
+        // Reset button row
+        btnReset = new JButton("Reset");
+        styleComponent(btnReset, font, red);
+        gbc.gridx = 1; gbc.gridy = 4; gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        mainPanel.add(btnReset, gbc);
+
+        backgroundLabel.add(mainPanel);
+        setContentPane(backgroundLabel);
+
+        // Button Listeners
+
+        btnCreateArray.addActionListener(e -> {
+            try {
+                arraySize = Integer.parseInt(textArraySizeInput.getText());
+                if (arraySize <= 0) throw new NumberFormatException();
+
+                array = new int[arraySize];
+                currentIndex = 0;
+
+                textArraySizeInput.setEnabled(false);
+                btnAddElements.setEnabled(true);
+                textArrayElementsInput.setEnabled(true);
+                textSortedArray.setText("");
+                textActualArray.setText("");
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Enter a valid positive integer for size.");
+            }
+        });
+
+        btnAddElements.addActionListener(e -> {
+            try {
+                int value = Integer.parseInt(textArrayElementsInput.getText());
+                if (currentIndex < arraySize) {
+                    array[currentIndex++] = value;
+                    updateActualArray();
+                    textArrayElementsInput.setText("");
+                }
+
+                if (currentIndex == arraySize) {
+                    btnAddElements.setEnabled(false);
+                    textArrayElementsInput.setEnabled(false);
+                    btnSortArray.setEnabled(true);
+                }
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Enter a valid integer.");
+            }
+        });
+
+        btnSortArray.addActionListener(e -> {
+            bubbleSort(array);
+            updateSortedArray();
+        });
+
+        btnReset.addActionListener(e -> {
+            textArraySizeInput.setText("");
+            textArrayElementsInput.setText("");
+            textActualArray.setText("");
+            textSortedArray.setText("");
+            textArraySizeInput.setEnabled(true);
+            textArrayElementsInput.setEnabled(false);
+            btnAddElements.setEnabled(false);
+            btnSortArray.setEnabled(false);
+            currentIndex = 0;
+            arraySize = 0;
+        });
+    }
+
+    private void bubbleSort(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = 0; j < arr.length - 1 - i; j++) {
+                if (arr[j] > arr[j + 1]) {
+                    int t = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = t;
+                }
+            }
+        }
+    }
+
+    private void updateActualArray() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < currentIndex; i++) {
+            sb.append(array[i]).append(" ");
+        }
+        textActualArray.setText(sb.toString().trim());
+    }
+
+    private void updateSortedArray() {
+        StringBuilder sb = new StringBuilder();
+        for (int value : array) {
+            sb.append(value).append(" ");
+        }
+        textSortedArray.setText(sb.toString().trim());
+    }
+
+    private void styleComponent(JComponent comp, Font font, Color color) {
+        comp.setFont(font);
+        comp.setForeground(color);
+        if (comp instanceof JTextField || comp instanceof JTextArea) {
+            comp.setBackground(Color.WHITE);
+        }
+    }
+}
